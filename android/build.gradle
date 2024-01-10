@@ -1,0 +1,62 @@
+group 'com.bukharskii.flutter.automotive.android_automotive_plugin'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.3.1'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+
+android {
+    if (project.android.hasProperty("namespace")) {
+        namespace 'com.bukharskii.flutter.automotive.android_automotive_plugin'
+    }
+
+    compileSdkVersion 33
+
+//    useLibrary 'android.car'
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    defaultConfig {
+        minSdk 23
+    }
+
+
+    dependencies {
+        testImplementation 'junit:junit:4.13.2'
+        testImplementation 'org.mockito:mockito-core:5.0.0'
+    }
+
+    testOptions {
+        unitTests.all {
+            testLogging {
+               events "passed", "skipped", "failed", "standardOut", "standardError"
+               outputs.upToDateWhen {false}
+               showStandardStreams = true
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation files('libs/android.car.jar')
+    implementation files('libs/iflytek-incall.jar')
+}
