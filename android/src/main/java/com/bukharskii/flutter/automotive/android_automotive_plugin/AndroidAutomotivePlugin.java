@@ -7,13 +7,23 @@ import android.car.hardware.CarSensorEvent;
 import android.car.hardware.hvac.CarHvacManager;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.view.Surface;
+import android.view.SurfaceControl;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
 
-import com.iflytek.autofly.mediagroup.model.util.ContextUtil;
-import com.incall.apps.commoninterface.vehiclesetting.manager.VehicleSettingManager;
+//import com.autonavi.amapauto.jni.AutoCarAppFocusManager;
+//import com.autonavi.amapauto.jni.MultiScreenNative;
+//import com.autonavi.extscreen.dto.PresentationConfig;
+import com.incall.serversdk.interactive.media.CaMediaSource;
+import com.incall.serversdk.interactive.media.DoubleMediaProxy;
+//import com.neusoft.na.ocservice.Binder.ChangAnSDKBinder;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 
 import io.flutter.Log;
@@ -22,6 +32,7 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.view.TextureRegistry;
 
 /** AndroidAutomotivePlugin */
 public class AndroidAutomotivePlugin implements FlutterPlugin, MethodCallHandler {
@@ -33,7 +44,27 @@ public class AndroidAutomotivePlugin implements FlutterPlugin, MethodCallHandler
   private MethodChannel channel;
   private CarAvcManagerUtils carAvcManagerUtils;
 
+  private  CurrentMetadataManagerService currentMetadataManagerService;
+
   private Config config;
+
+  public AndroidAutomotivePlugin() {
+
+        Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
+          // Get the stack trace.
+          StringWriter sw = new StringWriter();
+          PrintWriter pw = new PrintWriter(sw);
+          e.printStackTrace(pw);
+
+          String crash = sw.toString();
+
+          if (channel != null) {
+            channel.invokeMethod("onCrash", crash);
+          }
+        });
+
+
+  }
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -43,6 +74,11 @@ public class AndroidAutomotivePlugin implements FlutterPlugin, MethodCallHandler
     channel.setMethodCallHandler(this);
 
     config = new Config(flutterPluginBinding.getApplicationContext());
+
+//    currentMetadataManagerService = new CurrentMetadataManagerService();
+
+//    Intent intent = new Intent(flutterPluginBinding.getApplicationContext(), CurrentMetadataManagerService.class);
+//    flutterPluginBinding.getApplicationContext().startService(intent);
   }
 
   private static String carPropertyValueToString(Object value) {
@@ -207,12 +243,17 @@ public class AndroidAutomotivePlugin implements FlutterPlugin, MethodCallHandler
     else if (call.method.equals("getLatestSensorEvent")) {
       int sensorType = call.argument("sensorType");
 
-      CarSensorEvent value = carAvcManagerUtils.getLatestSensorEvent(sensorType);
-      if (value != null) {
-        result.success(carSensorEventToJsonString(value));
+      if (carAvcManagerUtils != null) {
+        CarSensorEvent value = carAvcManagerUtils.getLatestSensorEvent(sensorType);
+        if (value != null) {
+          result.success(carSensorEventToJsonString(value));
+        }
+        else {
+          result.success(null);
+        }
       }
       else {
-       result.success(null);
+        result.success(null);
       }
     }
     //
@@ -229,12 +270,78 @@ public class AndroidAutomotivePlugin implements FlutterPlugin, MethodCallHandler
     //
     else if (call.method.equals("setVehicleSettingMusicAlbumPictureFilePath")) {
       try {
-        boolean res = VehicleSettingManager.getInstance(flutterPluginBinding.getApplicationContext()).musicAlbumPicture(call.argument("path"));
-        result.success(res);
+//        boolean res = VehicleSettingManager.getInstance(flutterPluginBinding.getApplicationContext()).musicAlbumPicture(call.argument("path"));
+        result.success(true);
       } catch(Exception e) {
         e.printStackTrace();
 
         result.error("error", "setVehicleSettingManagerMusicAlbumPictureFilePath Error", e);
+      }
+    }
+    else if (call.method.equals("setNaviSurface")) {
+      try {
+
+        TextureRegistry.SurfaceTextureEntry entry = flutterPluginBinding.getTextureRegistry().createSurfaceTexture();
+        Surface surface = new Surface(entry.surfaceTexture());
+
+ //       com.autonavi.amapauto.jni.AutoCarAppFocusManager.jniRequestAppFocus(1);
+
+
+
+        result.success(null);
+      } catch(Exception e) {
+        e.printStackTrace();
+
+        result.error("error", "resetDoubleMediaPicture Error", e);
+      }
+    }
+    else if (call.method.equals("resetDoubleMediaPicture")) {
+      try {
+//        int doublePlayingId = call.argument("doublePlayingId");
+//        com.incall.serversdk.interactive.media.DoubleMediaProxy.getInstance().sendMediaAlbum(doublePlayingId, "default", null);
+        result.success(null);
+      } catch(Exception e) {
+        e.printStackTrace();
+
+        result.error("error", "resetDoubleMediaPicture Error", e);
+      }
+    }
+    else if (call.method.equals("setDoubleMediaMusicSource")) {
+      try {
+        int playingId = call.argument("playingId");
+        String programName = call.argument("programName");
+        String singerName = call.argument("singerName");
+        String songName = call.argument("songName");
+        int sourceType = call.argument("sourceType");
+
+        CaMediaSource source = new CaMediaSource();
+        source.playingId = playingId;
+        source.programName = programName;
+        source.singerName = singerName;
+        source.songName = songName;
+        source.sourceType = sourceType;
+
+        DoubleMediaProxy.getInstance().sendMediaSource(source);
+        result.success(null);
+      } catch(Exception e) {
+        e.printStackTrace();
+
+        result.error("error", "setDoubleMediaMusicSource Error", e);
+      }
+    }
+    //
+    else if (call.method.equals("setDoubleMediaMusicAlbumPictureFilePath")) {
+      try {
+        int doublePlayingId = call.argument("doublePlayingId");
+        String songId = call.argument("songId");
+        String path = call.argument("path");
+
+        DoubleMediaProxy.getInstance().sendMediaAlbumPath(doublePlayingId, songId, path);
+        result.success(null);
+      } catch(Exception e) {
+        e.printStackTrace();
+
+        result.error("error", "setDoubleMediaMusicAlbumPictureFilePath Error", e);
       }
     }
     //

@@ -29,7 +29,6 @@ android {
 
     compileSdkVersion 33
 
-//    useLibrary 'android.car'
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -37,6 +36,13 @@ android {
     }
     defaultConfig {
         minSdk 23
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+      //      useProguard false
+        }
     }
 
 
@@ -58,5 +64,13 @@ android {
 
 dependencies {
     implementation files('libs/android.car.jar')
-    implementation files('libs/iflytek-incall.jar')
+//    implementation files('libs/iflytek-incall.jar')
+//    implementation files('libs/full.jar')
+    implementation files('libs/incall-server-sdk.jar')
+//    implementation files('libs/navi.jar')
+//    implementation 'com.jakewharton:butterknife:10.2.3'
+//    implementation 'com.github.bumptech.glide:glide:4.16.0'
+//    implementation("com.squareup.okhttp3:okhttp")
+//    implementation("com.squareup.okhttp3:logging-interceptor")
+//    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
 }

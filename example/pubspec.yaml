@@ -35,6 +35,10 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
+  json_annotation: ^4.9.0
+  interactive_slider: ^0.2.2
+  filling_slider: ^0.0.3
+  slider_controller: ^0.0.5
 
 dev_dependencies:
   integration_test:
@@ -44,6 +48,7 @@ dev_dependencies:
 
   mobx_codegen: ^2.6.0
   build_runner: ^2.0.0
+  json_serializable: ^6.0.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

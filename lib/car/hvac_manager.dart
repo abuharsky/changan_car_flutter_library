@@ -30,6 +30,25 @@ class CarHvacManager {
     );
   }
 
+  Future<void> setSeatVentilationLevel(bool isDriver, int level) async {
+    return _plugin.setHvacIntProperty(
+      VehiclePropertyIds.HVAC_SEAT_VENTILATION,
+      isDriver
+          ? VehicleAreaSeat.SEAT_MAIN_DRIVER
+          : VehicleAreaSeat.SEAT_PASSENGER,
+      level,
+    );
+  }
+
+  Future<int> getSeatVentilationLevel(bool isDriver) async {
+    return _plugin.getHvacIntProperty(
+      VehiclePropertyIds.HVAC_SEAT_VENTILATION,
+      isDriver
+          ? VehicleAreaSeat.SEAT_MAIN_DRIVER
+          : VehicleAreaSeat.SEAT_PASSENGER,
+    );
+  }
+
   // AC
   Future<void> setAcTemperature(bool isDriver, double temp) async {
     return _plugin.setHvacFloatProperty(

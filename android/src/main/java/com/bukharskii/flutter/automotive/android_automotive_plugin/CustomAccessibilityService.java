@@ -2,6 +2,7 @@ package com.bukharskii.flutter.automotive.android_automotive_plugin;
 
 import android.accessibilityservice.AccessibilityService;
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -31,8 +32,15 @@ public class CustomAccessibilityService extends AccessibilityService implements 
 
     AtomicBoolean isRunning = new AtomicBoolean(false);
 
+    private CurrentMetadataManagerService currentMetadataManagerService;
+
     @SuppressLint("WakelockTimeout")
     private void runService() {
+
+
+        currentMetadataManagerService = new CurrentMetadataManagerService();
+        currentMetadataManagerService.onCreate(this, new ComponentName(this, CustomAccessibilityService.class));
+
         try {
             if (isRunning.get() || (backgroundEngine != null && !backgroundEngine.getDartExecutor().isExecutingDart())) {
                 Log.v(TAG, "CustomAccessibilityService already running, using existing service");

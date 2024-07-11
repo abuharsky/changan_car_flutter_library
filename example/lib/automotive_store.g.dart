@@ -63,6 +63,24 @@ mixin _$AutomotiveStore on AutomotiveStoreBase, Store {
     });
   }
 
+  late final _$_driverSeatSettingsAtom =
+      Atom(name: 'AutomotiveStoreBase._driverSeatSettings', context: context);
+
+  SeatSettings get driverSeatSettings {
+    _$_driverSeatSettingsAtom.reportRead();
+    return super._driverSeatSettings;
+  }
+
+  @override
+  SeatSettings get _driverSeatSettings => driverSeatSettings;
+
+  @override
+  set _driverSeatSettings(SeatSettings value) {
+    _$_driverSeatSettingsAtom.reportWrite(value, super._driverSeatSettings, () {
+      super._driverSeatSettings = value;
+    });
+  }
+
   late final _$_driverSeatHeatLevelAtom =
       Atom(name: 'AutomotiveStoreBase._driverSeatHeatLevel', context: context);
 
@@ -82,43 +100,23 @@ mixin _$AutomotiveStore on AutomotiveStoreBase, Store {
     });
   }
 
-  late final _$_driverSeatAutoHeatTimeAtom = Atom(
-      name: 'AutomotiveStoreBase._driverSeatAutoHeatTime', context: context);
-
-  SeatHeatTime get driverSeatAutoHeatTime {
-    _$_driverSeatAutoHeatTimeAtom.reportRead();
-    return super._driverSeatAutoHeatTime;
-  }
-
-  @override
-  SeatHeatTime get _driverSeatAutoHeatTime => driverSeatAutoHeatTime;
-
-  @override
-  set _driverSeatAutoHeatTime(SeatHeatTime value) {
-    _$_driverSeatAutoHeatTimeAtom
-        .reportWrite(value, super._driverSeatAutoHeatTime, () {
-      super._driverSeatAutoHeatTime = value;
-    });
-  }
-
-  late final _$_driverSeatAutoHeatTempThresholdAtom = Atom(
-      name: 'AutomotiveStoreBase._driverSeatAutoHeatTempThreshold',
+  late final _$_driverSeatVentilationLevelAtom = Atom(
+      name: 'AutomotiveStoreBase._driverSeatVentilationLevel',
       context: context);
 
-  SeatHeatTempThreshold get driverSeatAutoHeatTempThreshold {
-    _$_driverSeatAutoHeatTempThresholdAtom.reportRead();
-    return super._driverSeatAutoHeatTempThreshold;
+  int get driverSeatVentilationLevel {
+    _$_driverSeatVentilationLevelAtom.reportRead();
+    return super._driverSeatVentilationLevel;
   }
 
   @override
-  SeatHeatTempThreshold get _driverSeatAutoHeatTempThreshold =>
-      driverSeatAutoHeatTempThreshold;
+  int get _driverSeatVentilationLevel => driverSeatVentilationLevel;
 
   @override
-  set _driverSeatAutoHeatTempThreshold(SeatHeatTempThreshold value) {
-    _$_driverSeatAutoHeatTempThresholdAtom
-        .reportWrite(value, super._driverSeatAutoHeatTempThreshold, () {
-      super._driverSeatAutoHeatTempThreshold = value;
+  set _driverSeatVentilationLevel(int value) {
+    _$_driverSeatVentilationLevelAtom
+        .reportWrite(value, super._driverSeatVentilationLevel, () {
+      super._driverSeatVentilationLevel = value;
     });
   }
 
@@ -141,81 +139,63 @@ mixin _$AutomotiveStore on AutomotiveStoreBase, Store {
     });
   }
 
-  late final _$_passengerSeatAutoHeatTimeAtom = Atom(
-      name: 'AutomotiveStoreBase._passengerSeatAutoHeatTime', context: context);
-
-  SeatHeatTime get passengerSeatAutoHeatTime {
-    _$_passengerSeatAutoHeatTimeAtom.reportRead();
-    return super._passengerSeatAutoHeatTime;
-  }
-
-  @override
-  SeatHeatTime get _passengerSeatAutoHeatTime => passengerSeatAutoHeatTime;
-
-  @override
-  set _passengerSeatAutoHeatTime(SeatHeatTime value) {
-    _$_passengerSeatAutoHeatTimeAtom
-        .reportWrite(value, super._passengerSeatAutoHeatTime, () {
-      super._passengerSeatAutoHeatTime = value;
-    });
-  }
-
-  late final _$_passengerSeatAutoHeatTempThresholdAtom = Atom(
-      name: 'AutomotiveStoreBase._passengerSeatAutoHeatTempThreshold',
+  late final _$_passengerSeatVentilationLevelAtom = Atom(
+      name: 'AutomotiveStoreBase._passengerSeatVentilationLevel',
       context: context);
 
-  SeatHeatTempThreshold get passengerSeatAutoHeatTempThreshold {
-    _$_passengerSeatAutoHeatTempThresholdAtom.reportRead();
-    return super._passengerSeatAutoHeatTempThreshold;
+  int get passengerSeatVentilationLevel {
+    _$_passengerSeatVentilationLevelAtom.reportRead();
+    return super._passengerSeatVentilationLevel;
   }
 
   @override
-  SeatHeatTempThreshold get _passengerSeatAutoHeatTempThreshold =>
-      passengerSeatAutoHeatTempThreshold;
+  int get _passengerSeatVentilationLevel => passengerSeatVentilationLevel;
 
   @override
-  set _passengerSeatAutoHeatTempThreshold(SeatHeatTempThreshold value) {
-    _$_passengerSeatAutoHeatTempThresholdAtom
-        .reportWrite(value, super._passengerSeatAutoHeatTempThreshold, () {
-      super._passengerSeatAutoHeatTempThreshold = value;
+  set _passengerSeatVentilationLevel(int value) {
+    _$_passengerSeatVentilationLevelAtom
+        .reportWrite(value, super._passengerSeatVentilationLevel, () {
+      super._passengerSeatVentilationLevel = value;
     });
   }
 
-  late final _$AutomotiveStoreBaseActionController =
-      ActionController(name: 'AutomotiveStoreBase', context: context);
+  late final _$_passengerSeatSettingsAtom = Atom(
+      name: 'AutomotiveStoreBase._passengerSeatSettings', context: context);
 
-  @override
-  void setSeatHeatLevel(bool isDriverSeat, int level) {
-    final _$actionInfo = _$AutomotiveStoreBaseActionController.startAction(
-        name: 'AutomotiveStoreBase.setSeatHeatLevel');
-    try {
-      return super.setSeatHeatLevel(isDriverSeat, level);
-    } finally {
-      _$AutomotiveStoreBaseActionController.endAction(_$actionInfo);
-    }
+  SeatSettings get passengerSeatSettings {
+    _$_passengerSeatSettingsAtom.reportRead();
+    return super._passengerSeatSettings;
   }
 
   @override
-  void setSeatAutoHeatTime(bool isDriverSeat, SeatHeatTime time) {
-    final _$actionInfo = _$AutomotiveStoreBaseActionController.startAction(
-        name: 'AutomotiveStoreBase.setSeatAutoHeatTime');
-    try {
-      return super.setSeatAutoHeatTime(isDriverSeat, time);
-    } finally {
-      _$AutomotiveStoreBaseActionController.endAction(_$actionInfo);
-    }
-  }
+  SeatSettings get _passengerSeatSettings => passengerSeatSettings;
 
   @override
-  void setSeatAutoHeatTempTheshold(
-      bool isDriverSeat, SeatHeatTempThreshold temp) {
-    final _$actionInfo = _$AutomotiveStoreBaseActionController.startAction(
-        name: 'AutomotiveStoreBase.setSeatAutoHeatTempTheshold');
-    try {
-      return super.setSeatAutoHeatTempTheshold(isDriverSeat, temp);
-    } finally {
-      _$AutomotiveStoreBaseActionController.endAction(_$actionInfo);
-    }
+  set _passengerSeatSettings(SeatSettings value) {
+    _$_passengerSeatSettingsAtom
+        .reportWrite(value, super._passengerSeatSettings, () {
+      super._passengerSeatSettings = value;
+    });
+  }
+
+  late final _$setDriverSeatSettingsAsyncAction = AsyncAction(
+      'AutomotiveStoreBase.setDriverSeatSettings',
+      context: context);
+
+  @override
+  Future<void> setDriverSeatSettings(SeatSettings seat) {
+    return _$setDriverSeatSettingsAsyncAction
+        .run(() => super.setDriverSeatSettings(seat));
+  }
+
+  late final _$setPassengerSeatSettingsAsyncAction = AsyncAction(
+      'AutomotiveStoreBase.setPassengerSeatSettings',
+      context: context);
+
+  @override
+  Future<void> setPassengerSeatSettings(SeatSettings seat) {
+    return _$setPassengerSeatSettingsAsyncAction
+        .run(() => super.setPassengerSeatSettings(seat));
   }
 
   @override

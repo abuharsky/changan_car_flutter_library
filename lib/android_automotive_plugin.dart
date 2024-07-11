@@ -81,6 +81,12 @@ class AndroidAutomotivePlugin {
           onLogCallback!("${call.method}: ${call.arguments as String}");
         }
       }
+      //
+      else if (call.method == "onCrash") {
+        if (onLogCallback != null) {
+          onLogCallback!("${call.method}: ${call.arguments as String}");
+        }
+      }
     });
   }
 
@@ -153,6 +159,47 @@ class AndroidAutomotivePlugin {
     });
 
     return value;
+  }
+
+  Future<void> setDoubleMediaMusicAlbumPictureFilePath({
+    required int doublePlayingId,
+    required String songId,
+    required String path,
+  }) async {
+    await methodChannel
+        .invokeMethod("setDoubleMediaMusicAlbumPictureFilePath", {
+      "doublePlayingId": doublePlayingId,
+      "songId": songId,
+      "path": path,
+    });
+  }
+
+  Future<void> setDoubleMediaMusicSource({
+    required int playingId,
+    required String programName,
+    required String singerName,
+    required String songName,
+    required int sourceType,
+  }) async {
+    await methodChannel.invokeMethod("setDoubleMediaMusicSource", {
+      "playingId": playingId,
+      "programName": programName,
+      "singerName": singerName,
+      "songName": songName,
+      "sourceType": sourceType,
+    });
+  }
+
+  Future<void> resetDoubleMediaPicture({
+    required int playingId,
+  }) async {
+    await methodChannel.invokeMethod("resetDoubleMediaPicture", {
+      "playingId": playingId,
+    });
+  }
+
+  Future<void> setNaviSurface() async {
+    await methodChannel.invokeMethod("setNaviSurface");
   }
 }
 

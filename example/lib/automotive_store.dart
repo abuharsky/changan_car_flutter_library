@@ -13,53 +13,13 @@ import 'package:android_automotive_plugin/car/sensor_manager.dart';
 import 'package:android_automotive_plugin/car/vehicle_area_in_out_car.dart';
 import 'package:android_automotive_plugin/car/vehicle_area_seat.dart';
 import 'package:android_automotive_plugin/car/vehicle_property_ids.dart';
-import 'package:android_automotive_plugin_example/file_writer.dart';
-import 'package:flutter/services.dart';
 import 'package:mobx/mobx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'file_writer.dart';
+import 'model.dart';
+
 part 'automotive_store.g.dart';
-
-enum SeatHeatTime {
-  off,
-  short,
-  medium,
-  long,
-}
-
-extension SeatHeatTimeDuration on SeatHeatTime {
-  int get getDurationInMinutes {
-    switch (this) {
-      case SeatHeatTime.off:
-        return 0;
-      case SeatHeatTime.short:
-        return 3;
-      case SeatHeatTime.medium:
-        return 5;
-      case SeatHeatTime.long:
-        return 7;
-    }
-  }
-}
-
-enum SeatHeatTempThreshold {
-  low,
-  medium,
-  high,
-}
-
-extension SeatHeatTempThresholdTemp on SeatHeatTempThreshold {
-  int get getTempInCelcius {
-    switch (this) {
-      case SeatHeatTempThreshold.low:
-        return 0;
-      case SeatHeatTempThreshold.medium:
-        return 7;
-      case SeatHeatTempThreshold.high:
-        return 15;
-    }
-  }
-}
 
 class AutomotiveStore = AutomotiveStoreBase with _$AutomotiveStore;
 
@@ -108,66 +68,66 @@ abstract class AutomotiveStoreBase with Store {
   double? _insideTemp;
 
   @readonly
+  SeatSettings _driverSeatSettings = SeatSettings.defaultSettings();
+
+  @readonly
   int _driverSeatHeatLevel = 0;
 
   @readonly
-  SeatHeatTime _driverSeatAutoHeatTime = SeatHeatTime.off;
-
-  @readonly
-  SeatHeatTempThreshold _driverSeatAutoHeatTempThreshold =
-      SeatHeatTempThreshold.medium;
+  int _driverSeatVentilationLevel = 0;
 
   @readonly
   int _passengerSeatHeatLevel = 0;
 
   @readonly
-  SeatHeatTime _passengerSeatAutoHeatTime = SeatHeatTime.off;
+  int _passengerSeatVentilationLevel = 0;
 
   @readonly
-  SeatHeatTempThreshold _passengerSeatAutoHeatTempThreshold =
-      SeatHeatTempThreshold.medium;
+  SeatSettings _passengerSeatSettings = SeatSettings.defaultSettings();
+
+  Timer? _timerDriver;
+  Timer? _timerPassenger;
 
   @action
-  void setSeatHeatLevel(bool isDriverSeat, int level) {
-    _carHvacManager.setSeatHeatLevel(isDriverSeat, level);
+  Future<void> setDriverSeatSettings(SeatSettings seat) async {
+    _driverSeatSettings = seat;
 
-    if (isDriverSeat) {
-      _driverSeatHeatLevel = level;
-    } else {
-      _passengerSeatHeatLevel = level;
-    }
+    await _saveSettings();
+    await _checkConditionsAndApplySeatActions();
   }
 
   @action
-  void setSeatAutoHeatTime(bool isDriverSeat, SeatHeatTime time) {
-    if (isDriverSeat) {
-      _driverSeatAutoHeatTime = time;
-    } else {
-      _passengerSeatAutoHeatTime = time;
-    }
+  Future<void> setPassengerSeatSettings(SeatSettings seat) async {
+    _passengerSeatSettings = seat;
 
-    _saveSettings();
-  }
-
-  @action
-  void setSeatAutoHeatTempTheshold(
-      bool isDriverSeat, SeatHeatTempThreshold temp) {
-    if (isDriverSeat) {
-      _driverSeatAutoHeatTempThreshold = temp;
-    } else {
-      _passengerSeatAutoHeatTempThreshold = temp;
-    }
-
-    _saveSettings();
+    await _saveSettings();
+    await _checkConditionsAndApplySeatActions();
   }
 
   //////////////////////////////
 
-  _onCarSensorEvent(CarSensorEvent carSensorEvent) {
-    if (carSensorEvent.sensorType ==
-        CarSensorTypes.SENSOR_TYPE_IGNITION_STATE) {
-      int ignitionState = carSensorEvent.intValues.first;
-      _ignitionOn = ignitionState == IgnitionState.IGNITION_STATE_ON;
+  _logError(String text) async {
+    try {
+      _log += "[${DateTime.now().toString()}] $text\n\n";
+      await FileWriter.writeFileToDownloadsDir(
+          utf8.encode(_log), "error_log.txt");
+
+      print("[ERROR SERVICE] $text");
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  _onCarSensorEvent(CarSensorEvent carSensorEvent) async {
+    try {
+      if (carSensorEvent.sensorType ==
+          CarSensorTypes.SENSOR_TYPE_IGNITION_STATE) {
+        int ignitionState = carSensorEvent.intValues.first;
+        _ignitionOn = ignitionState == IgnitionState.IGNITION_STATE_ON;
+        await _checkConditionsAndApplySeatActions();
+      }
+    } catch (e) {
+      _logError(e.toString());
     }
   }
 
@@ -178,6 +138,7 @@ abstract class AutomotiveStoreBase with Store {
         if (carPropertyValue.areaId == VehicleAreaInOutCAR.InOutCAR_INSIDE) {
           _insideTemp =
               ((double.tryParse(carPropertyValue.value) ?? 0) - 84) / 2;
+          await _checkConditionsAndApplySeatActions();
         }
 
         final temp = await _carHvacManager.getInsideTemperature();
@@ -191,28 +152,19 @@ abstract class AutomotiveStoreBase with Store {
         } else if (carPropertyValue.areaId == VehicleAreaSeat.SEAT_PASSENGER) {
           _passengerSeatHeatLevel = int.tryParse(carPropertyValue.value) ?? 0;
         }
+      } else if (carPropertyValue.propertyId ==
+          VehiclePropertyIds.HVAC_SEAT_VENTILATION) {
+        if (carPropertyValue.areaId == VehicleAreaSeat.SEAT_MAIN_DRIVER) {
+          _driverSeatVentilationLevel =
+              int.tryParse(carPropertyValue.value) ?? 0;
+        } else if (carPropertyValue.areaId == VehicleAreaSeat.SEAT_PASSENGER) {
+          _passengerSeatVentilationLevel =
+              int.tryParse(carPropertyValue.value) ?? 0;
+        }
       }
     } catch (e) {
       _log += ">>>>>>>>>>>>>>>>>>>>[_onHvacChangeEvent] ${e.toString()} \n\n\n";
-    }
-  }
-
-  Future<void> setTestCover() async {
-    final asset = await rootBundle.load("assets/images/flutter-logo.jpg");
-    final buffer = asset.buffer;
-    final file = await FileWriter.writeFileToDownloadsDir(
-        buffer.asUint8List(asset.offsetInBytes, asset.lengthInBytes),
-        "cover.jpg");
-
-    String path = file.absolute.path.replaceAll('//', '/');
-    _log += "setTestCover $path\n\n";
-
-    try {
-      final res = await _androidAutomotivePlugin
-          .setVehicleSettingMusicAlbumPictureFilePath(path);
-      _log += "setTestCover OK: $res\n\n";
-    } catch (e) {
-      _log += "setTestCover ERROR ${e.toString()}\n\n";
+      _logError(e.toString());
     }
   }
 
@@ -221,28 +173,97 @@ abstract class AutomotiveStoreBase with Store {
   Future<void> _loadSettings() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    _driverSeatAutoHeatTime =
-        SeatHeatTime.values[prefs.getInt('_driverSeatAutoHeatTime') ?? 0];
-    _driverSeatAutoHeatTempThreshold = SeatHeatTempThreshold
-        .values[prefs.getInt('_driverSeatAutoHeatTempThreshold') ?? 1];
+    final driver = prefs.getString("driver_seat_settings");
+    if (driver != null) {
+      _driverSeatSettings = SeatSettings.fromJson(jsonDecode(driver));
+    }
 
-    _passengerSeatAutoHeatTime =
-        SeatHeatTime.values[prefs.getInt('_passengerSeatAutoHeatTime') ?? 0];
-    _passengerSeatAutoHeatTempThreshold = SeatHeatTempThreshold
-        .values[prefs.getInt('_passengerSeatAutoHeatTempThreshold') ?? 1];
+    final passenger = prefs.getString("passenger_seat_settings");
+    if (passenger != null) {
+      _passengerSeatSettings = SeatSettings.fromJson(jsonDecode(passenger));
+    }
   }
 
   Future<void> _saveSettings() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    await prefs.setInt(
-        '_driverSeatAutoHeatTime', _driverSeatAutoHeatTime.index);
-    await prefs.setInt('_driverSeatAutoHeatTempThreshold',
-        _driverSeatAutoHeatTempThreshold.index);
+    await prefs.setString(
+        "driver_seat_settings", jsonEncode(_driverSeatSettings.toJson()));
+    await prefs.setString(
+        "passenger_seat_settings", jsonEncode(_passengerSeatSettings.toJson()));
+  }
 
-    await prefs.setInt(
-        '_passengerSeatAutoHeatTime', _passengerSeatAutoHeatTime.index);
-    await prefs.setInt('_passengerSeatAutoHeatTempThreshold',
-        _passengerSeatAutoHeatTempThreshold.index);
+  Future<void> _checkConditionsAndApplySeatActions() async {
+    // _carHvacManager.setSeatHeatLevel(true, seat.heatLevel);
+    // _carHvacManager.setSeatVentilationLevel(true, seat.ventilationLevel);
+
+    final insideTemp = _insideTemp ?? 0;
+
+    if (_ignitionOn) {
+      // enable driver seat
+      if (_driverSeatSettings.autoHeatTime > 0 &&
+              insideTemp < _driverSeatSettings.autoHeatTempThreshold
+          //
+          ) {
+        //
+        _carHvacManager.setSeatHeatLevel(true, 3);
+        //
+        _timerDriver?.cancel();
+        _timerDriver = Timer(
+          Duration(minutes: _driverSeatSettings.autoHeatTime),
+          () {
+            _carHvacManager.setSeatHeatLevel(true, 0);
+          },
+        );
+      } else if (_driverSeatSettings.autoVentilationTime > 0 &&
+              insideTemp > _driverSeatSettings.autoVentilationTempThreshold
+          //
+          ) {
+        //
+        _carHvacManager.setSeatVentilationLevel(true, 3);
+        //
+        _timerDriver?.cancel();
+        _timerDriver = Timer(
+          Duration(minutes: _driverSeatSettings.autoVentilationTime),
+          () {
+            _carHvacManager.setSeatVentilationLevel(true, 0);
+          },
+        );
+      }
+
+      // enable passenger seat
+      if (_passengerSeatSettings.autoHeatTime > 0 &&
+              insideTemp < _passengerSeatSettings.autoHeatTempThreshold
+          //
+          ) {
+        //
+        _carHvacManager.setSeatHeatLevel(true, 3);
+        //
+        _timerPassenger?.cancel();
+        _timerPassenger = Timer(
+          Duration(minutes: _passengerSeatSettings.autoHeatTime),
+          () {
+            _carHvacManager.setSeatHeatLevel(true, 0);
+          },
+        );
+      } else if (_passengerSeatSettings.autoVentilationTime > 0 &&
+              insideTemp > _passengerSeatSettings.autoVentilationTempThreshold
+          //
+          ) {
+        //
+        _carHvacManager.setSeatVentilationLevel(true, 3);
+        //
+        _timerPassenger?.cancel();
+        _timerPassenger = Timer(
+          Duration(minutes: _passengerSeatSettings.autoVentilationTime),
+          () {
+            _carHvacManager.setSeatVentilationLevel(true, 0);
+          },
+        );
+      }
+    } else {
+      _timerDriver?.cancel();
+      _timerPassenger?.cancel();
+    }
   }
 }

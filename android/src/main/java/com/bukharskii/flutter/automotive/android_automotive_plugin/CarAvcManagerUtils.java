@@ -307,7 +307,9 @@ public class CarAvcManagerUtils {
 
     public CarSensorEvent getLatestSensorEvent(int sensorType) {
         try {
-            return carSensorManager.getLatestSensorEvent(sensorType);
+            if (carSensorManager != null) {
+                return carSensorManager.getLatestSensorEvent(sensorType);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             carAvcManagerListener.onLogEvent("CarAvcManagerUtils.getLatestSensorEvent error Other: proId=" + sensorType);
