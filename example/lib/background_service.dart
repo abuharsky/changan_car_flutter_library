@@ -11,7 +11,7 @@ import 'package:android_automotive_plugin/car/ignition_state.dart';
 import 'package:android_automotive_plugin_example/file_writer.dart';
 import 'package:android_automotive_plugin_example/model.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 
@@ -22,29 +22,29 @@ Future<void> initializeBackgroundService() async {
 
   final service = FlutterBackgroundService();
 
-  /// OPTIONAL, using custom notification channel id
-  const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'my_foreground', // id
-    'MY FOREGROUND SERVICE', // title
-    description:
-        'This channel is used for important notifications.', // description
-    importance: Importance.low, // importance must be at low or higher level
-  );
+  // /// OPTIONAL, using custom notification channel id
+  // const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  //   'my_foreground', // id
+  //   'MY FOREGROUND SERVICE', // title
+  //   description:
+  //       'This channel is used for important notifications.', // description
+  //   importance: Importance.low, // importance must be at low or higher level
+  // );
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  // final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  //     FlutterLocalNotificationsPlugin();
 
-  await flutterLocalNotificationsPlugin.initialize(
-    const InitializationSettings(
-      iOS: DarwinInitializationSettings(),
-      android: AndroidInitializationSettings('ic_bg_service_small'),
-    ),
-  );
+  // await flutterLocalNotificationsPlugin.initialize(
+  //   const InitializationSettings(
+  //     iOS: DarwinInitializationSettings(),
+  //     android: AndroidInitializationSettings('ic_bg_service_small'),
+  //   ),
+  // );
 
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
+  // await flutterLocalNotificationsPlugin
+  //     .resolvePlatformSpecificImplementation<
+  //         AndroidFlutterLocalNotificationsPlugin>()
+  //     ?.createNotificationChannel(channel);
 
   await _log("configure");
 
