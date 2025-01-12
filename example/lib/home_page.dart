@@ -1,19 +1,87 @@
 import 'dart:math';
 
-import 'package:android_automotive_plugin_example/automotive_store.dart';
 import 'package:android_automotive_plugin_example/model.dart';
-import 'package:filling_slider/filling_slider.dart';
+import 'package:android_automotive_plugin_example/new/preferences_manager.dart';
+import 'package:android_automotive_plugin_example/new/seat_settings_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:interactive_slider/interactive_slider.dart';
-import 'package:slider_controller/slider_controller.dart';
 
 import 'log_page.dart';
+import 'new/automotive_adapter.dart';
 
-class HomePage extends StatelessWidget {
-  final AutomotiveStore store;
+class HomePage extends StatefulWidget {
+  final AutomotiveAdapter automotiveAdapter;
 
-  const HomePage({super.key, required this.store});
+  const HomePage({
+    super.key,
+    required this.automotiveAdapter,
+  });
+
+  @override
+  State<StatefulWidget> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _ignitionOn = false;
+  double? _insideTemp;
+
+  int _driverSeatHeatLevel = 0;
+  int _driverSeatVentilationLevel = 0;
+
+  int _passengerSeatHeatLevel = 0;
+  int _passengerSeatVentilationLevel = 0;
+
+  SeatSettings _driverSeatSettings = SeatSettings.defaultSettings();
+  SeatSettings _passengerSeatSettings = SeatSettings.defaultSettings();
+
+  @override
+  void initState() {
+    super.initState();
+
+    PreferencesManager.loadDriverSeatSettings().then(
+      (value) => setState(() {
+        _driverSeatSettings = value;
+      }),
+    );
+
+    PreferencesManager.loadPassengerSeatSettings().then(
+      (value) => setState(() {
+        _passengerSeatSettings = value;
+      }),
+    );
+
+    widget.automotiveAdapter.onIgnitionChange = (ignition) {
+      setState(() {
+        _ignitionOn = ignition;
+      });
+    };
+
+    widget.automotiveAdapter.onTemperatureChange = (temp) {
+      setState(() {
+        _insideTemp = temp;
+      });
+    };
+
+    widget.automotiveAdapter.onSeatHeatChange = (isDriver, level) {
+      setState(() {
+        if (isDriver) {
+          _driverSeatHeatLevel = level;
+        } else {
+          _passengerSeatHeatLevel = level;
+        }
+      });
+    };
+
+    widget.automotiveAdapter.onSeatVentilationChange = (isDriver, level) {
+      setState(() {
+        if (isDriver) {
+          _driverSeatVentilationLevel = level;
+        } else {
+          _passengerSeatVentilationLevel = level;
+        }
+      });
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -223,26 +291,26 @@ class HomePage extends StatelessWidget {
                       const SizedBox(width: 8),
                       Icon(
                         Icons.circle_rounded,
-                        color: store.ignitionOn ? Colors.green : Colors.grey,
+                        color: _ignitionOn ? Colors.green : Colors.grey,
                       ),
                       const SizedBox(width: 32),
                       Text(
-                          "ТЕМПЕРАТУРА В САЛОНЕ ${store.insideTemp == null ? "--" : store.insideTemp!}°C",
+                          "ТЕМПЕРАТУРА В САЛОНЕ ${_insideTemp == null ? "--" : _insideTemp!}°C",
                           style: textStyle),
                       const Spacer(),
-                      const SizedBox(width: 16),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  LogPage(automotiveStore: store),
-                            ),
-                          );
-                        },
-                        child: const Text("Logs"),
-                      ),
+                      // const SizedBox(width: 16),
+                      // TextButton(
+                      //   onPressed: () {
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (context) =>
+                      //             LogPage(automotiveStore: automotiveStore),
+                      //       ),
+                      //     );
+                      //   },
+                      //   child: const Text("Logs"),
+                      // ),
                       const SizedBox(width: 40),
                     ],
                   ),
@@ -262,11 +330,15 @@ class HomePage extends StatelessWidget {
                         Observer(
                           builder: (context) => buildChairSegment(
                             true,
-                            store.driverSeatHeatLevel,
-                            store.driverSeatVentilationLevel,
-                            store.driverSeatSettings,
+                            _driverSeatHeatLevel,
+                            _driverSeatVentilationLevel,
+                            _driverSeatSettings,
                             (seatSettings) {
-                              store.setDriverSeatSettings(seatSettings);
+                              PreferencesManager.saveDriverSeatSettings(
+                                  seatSettings);
+                              setState(() {
+                                _driverSeatSettings = seatSettings;
+                              });
                             },
                           ),
                         ),
@@ -279,11 +351,15 @@ class HomePage extends StatelessWidget {
                         Observer(
                           builder: (context) => buildChairSegment(
                             false,
-                            store.passengerSeatHeatLevel,
-                            store.passengerSeatVentilationLevel,
-                            store.passengerSeatSettings,
+                            _passengerSeatHeatLevel,
+                            _passengerSeatVentilationLevel,
+                            _passengerSeatSettings,
                             (seatSettings) {
-                              store.setPassengerSeatSettings(seatSettings);
+                              PreferencesManager.savePassengerSeatSettings(
+                                  seatSettings);
+                              setState(() {
+                                _passengerSeatSettings = seatSettings;
+                              });
                             },
                           ),
                         ),

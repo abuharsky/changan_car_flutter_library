@@ -1,13 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:async';
-
-import 'package:android_automotive_plugin/car/hvac_property_ids.dart';
-import 'package:android_automotive_plugin/car/vehicle_area_seat.dart';
 import 'package:android_automotive_plugin_example/accessibility_service.dart';
-import 'package:android_automotive_plugin_example/automotive_store.dart';
 import 'package:android_automotive_plugin_example/background_service.dart';
 import 'package:android_automotive_plugin_example/home_page.dart';
+import 'package:android_automotive_plugin_example/new/automotive_adapter.dart';
+import 'package:android_automotive_plugin_example/new/seat_settings_store.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -16,13 +11,15 @@ void main() async {
   await initializeBackgroundService();
   await initializeAccessibilityService();
 
-  final store = AutomotiveStore();
-  runApp(MyApp(store: store));
+  final automotiveAdapter = AutomotiveAdapter();
+
+  runApp(MyApp(automotiveAdapter: automotiveAdapter));
 }
 
 class MyApp extends StatefulWidget {
-  final AutomotiveStore store;
-  const MyApp({super.key, required this.store});
+  final AutomotiveAdapter automotiveAdapter;
+
+  const MyApp({super.key, required this.automotiveAdapter});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -39,7 +36,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       darkTheme: ThemeData.dark(useMaterial3: true),
       themeMode: ThemeMode.dark,
-      home: HomePage(store: widget.store),
+      home: HomePage(automotiveAdapter: widget.automotiveAdapter),
     );
   }
 }

@@ -138,7 +138,7 @@ abstract class AutomotiveStoreBase with Store {
         if (carPropertyValue.areaId == VehicleAreaInOutCAR.InOutCAR_INSIDE) {
           _insideTemp =
               ((double.tryParse(carPropertyValue.value) ?? 0) - 84) / 2;
-          await _checkConditionsAndApplySeatActions();
+          //         await _checkConditionsAndApplySeatActions();
         }
 
         final temp = await _carHvacManager.getInsideTemperature();
@@ -148,7 +148,10 @@ abstract class AutomotiveStoreBase with Store {
       } else if (carPropertyValue.propertyId ==
           VehiclePropertyIds.HVAC_SEAT_TEMPERATURE) {
         if (carPropertyValue.areaId == VehicleAreaSeat.SEAT_MAIN_DRIVER) {
-          _driverSeatHeatLevel = int.tryParse(carPropertyValue.value) ?? 0;
+          final value = int.tryParse(carPropertyValue.value) ?? 0;
+          if (_driverSeatHeatLevel != value) {
+            _driverSeatHeatLevel = value;
+          }
         } else if (carPropertyValue.areaId == VehicleAreaSeat.SEAT_PASSENGER) {
           _passengerSeatHeatLevel = int.tryParse(carPropertyValue.value) ?? 0;
         }

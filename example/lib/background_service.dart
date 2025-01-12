@@ -3,17 +3,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
-import 'package:android_automotive_plugin/android_automotive_plugin.dart';
-import 'package:android_automotive_plugin/car/car_sensor_event.dart';
-import 'package:android_automotive_plugin/car/car_sensor_types.dart';
-import 'package:android_automotive_plugin/car/hvac_manager.dart';
-import 'package:android_automotive_plugin/car/ignition_state.dart';
 import 'package:android_automotive_plugin_example/file_writer.dart';
 import 'package:android_automotive_plugin_example/model.dart';
+import 'package:android_automotive_plugin_example/new/automotive_adapter.dart';
+import 'package:android_automotive_plugin_example/new/preferences_manager.dart';
+import 'package:android_automotive_plugin_example/new/seat_manager.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 
 import 'automotive_store.dart';
 
@@ -69,7 +65,8 @@ Future<void> initializeBackgroundService() async {
   await _log("done");
 }
 
-late AutomotiveStore _store;
+late SeatManager _seatManager;
+late Timer _timer;
 
 @pragma('vm:entry-point')
 onStart(ServiceInstance service) async {
@@ -84,8 +81,42 @@ onStart(ServiceInstance service) async {
     );
   }
 
-  _store = AutomotiveStore();
-  await _log("init store");
+  final adapter = AutomotiveAdapter();
+
+  SeatSettings driverSettings =
+      await PreferencesManager.loadDriverSeatSettings();
+  SeatSettings passengerSettings =
+      await PreferencesManager.loadPassengerSeatSettings();
+
+  _seatManager = SeatManager(
+    automotiveAdapter: adapter,
+    driverSettings: driverSettings,
+    passengerSettings: passengerSettings,
+  );
+
+  _timer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+    final newDriverSettings = await PreferencesManager.loadDriverSeatSettings();
+    final newPassengerSettings =
+        await PreferencesManager.loadPassengerSeatSettings();
+
+    if (newDriverSettings != driverSettings ||
+        newPassengerSettings != passengerSettings) {
+      driverSettings = newDriverSettings;
+      passengerSettings = newPassengerSettings;
+
+      await _log("settings updated, restart SeatManager");
+
+      // restart manager
+      _seatManager = SeatManager(
+        automotiveAdapter: adapter,
+        driverSettings: driverSettings,
+        passengerSettings: passengerSettings,
+      );
+    }
+  });
+
+//  _store = AutomotiveStore();
+  await _log("init SeatManager");
   final completer = Completer();
   await _log("wait");
 

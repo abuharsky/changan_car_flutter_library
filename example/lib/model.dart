@@ -43,4 +43,22 @@ class SeatSettings {
       _$SeatSettingsFromJson(json);
 
   Map<String, dynamic> toJson() => _$SeatSettingsToJson(this);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is SeatSettings &&
+        other.autoHeatTime == autoHeatTime &&
+        other.autoHeatTempThreshold == autoHeatTempThreshold &&
+        other.autoVentilationTime == autoVentilationTime &&
+        other.autoVentilationTempThreshold == autoVentilationTempThreshold;
+  }
+
+  @override
+  int get hashCode =>
+      autoHeatTime.hashCode ^
+      autoHeatTempThreshold.hashCode ^
+      autoVentilationTime.hashCode ^
+      autoVentilationTempThreshold.hashCode;
 }
