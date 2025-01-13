@@ -2,7 +2,6 @@ import 'package:android_automotive_plugin_example/accessibility_service.dart';
 import 'package:android_automotive_plugin_example/background_service.dart';
 import 'package:android_automotive_plugin_example/home_page.dart';
 import 'package:android_automotive_plugin_example/new/automotive_adapter.dart';
-import 'package:android_automotive_plugin_example/new/seat_settings_store.dart';
 import 'package:flutter/material.dart';
 
 void main() async {

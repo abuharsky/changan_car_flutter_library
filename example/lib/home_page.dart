@@ -2,11 +2,9 @@ import 'dart:math';
 
 import 'package:android_automotive_plugin_example/model.dart';
 import 'package:android_automotive_plugin_example/new/preferences_manager.dart';
-import 'package:android_automotive_plugin_example/new/seat_settings_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 
-import 'log_page.dart';
 import 'new/automotive_adapter.dart';
 
 class HomePage extends StatefulWidget {

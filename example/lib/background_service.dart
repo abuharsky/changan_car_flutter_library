@@ -11,8 +11,6 @@ import 'package:android_automotive_plugin_example/new/seat_manager.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import 'automotive_store.dart';
-
 Future<void> initializeBackgroundService() async {
   await _log("initializeService");
 
